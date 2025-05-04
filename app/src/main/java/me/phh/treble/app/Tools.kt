@@ -9,6 +9,9 @@ object Tools {
     val vendorFp = SystemProperties.get("ro.vendor.build.fingerprint")
     val vendorFpLow = vendorFp.toLowerCase()
     val deviceId = SystemProperties.get("ro.build.overlay.deviceid")
+    
+    val oppoPrjName: String
+        get() = SystemProperties.get("ro.oppo.prjname", "")
 
     fun startup(ctxt: Context) {
         audioManager = ctxt.getSystemService(AudioManager::class.java)
