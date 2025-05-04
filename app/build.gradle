@@ -1,5 +1,4 @@
 apply plugin: 'com.android.application'
-
 apply plugin: 'kotlin-android'
 
 android {
@@ -25,6 +24,11 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+
+    lintOptions {
+        disable 'ProtectedPermissions'
+    }
+
 }
 
 dependencies {
