@@ -131,44 +131,51 @@ class ImsSettingsFragment : SettingsFragment() {
                         return
                     }
 
-                    val localUri = Uri.parse(cursor.getString(cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)))
-                    Log.d("PHH", "Got localURI = $localUri")
-                    val filename = localUri.lastPathSegment
-                    val path = localUri.path!!
-                    val pi = context.packageManager.packageInstaller
-                    val sessionId = pi.createSession(PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL))
-                    val session = pi.openSession(sessionId)
+                    // Исправленный блок (строки 134-137)
+                    val columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)
+                    if (columnIndex >= 0) {
+                        val localUri = Uri.parse(cursor.getString(columnIndex))
+                        Log.d("PHH", "Got localURI = $localUri")
+                        val filename = localUri.lastPathSegment
+                        val path = localUri.path!!
+                        val pi = context.packageManager.packageInstaller
+                        val sessionId = pi.createSession(PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL))
+                        val session = pi.openSession(sessionId)
 
-                    Misc.safeSetprop("persist.vendor.vilte_support", "0")
+                        Misc.safeSetprop("persist.vendor.vilte_support", "0")
 
-                    session.openWrite("hello", 0, -1).use { output ->
-                        FileInputStream(path).use { input ->
-                            val buf = ByteArray(512*1024)
-                            while(input.available()>0) {
-                                val l = input.read(buf)
-                                output.write(buf, 0, l)
-                            }
-                            session.fsync(output)
-                        }
-                    }
-
-                    activity.registerReceiver(
-                            object: BroadcastReceiver() {
-                                override fun onReceive(p0: Context?, intet: Intent?) {
-                                    Log.e("PHH", "Apk install received $intent" )
-                                    Toast.makeText(p0, "IMS apk installed! You may now reboot.", Toast.LENGTH_LONG).show()
+                        session.openWrite("hello", 0, -1).use { output ->
+                            FileInputStream(path).use { input ->
+                                val buf = ByteArray(512*1024)
+                                while(input.available()>0) {
+                                    val l = input.read(buf)
+                                    output.write(buf, 0, l)
                                 }
-                            },
-                            IntentFilter("me.phh.treble.app.ImsInstalled")
-                    )
+                                session.fsync(output)
+                            }
+                        }
 
-                    session.commit(
-                            PendingIntent.getBroadcast(
-                                    this@ImsSettingsFragment.activity,
-                                    1,
-                                    Intent("me.phh.treble.app.ImsInstalled"),
-                                    PendingIntent.FLAG_ONE_SHOT).intentSender)
-                    activity.unregisterReceiver(this)
+                        activity.registerReceiver(
+                                object: BroadcastReceiver() {
+                                    override fun onReceive(p0: Context?, intet: Intent?) {
+                                        Log.e("PHH", "Apk install received $intent" )
+                                        Toast.makeText(p0, "IMS apk installed! You may now reboot.", Toast.LENGTH_LONG).show()
+                                    }
+                                },
+                                IntentFilter("me.phh.treble.app.ImsInstalled")
+                        )
+
+                        session.commit(
+                                PendingIntent.getBroadcast(
+                                        this@ImsSettingsFragment.activity,
+                                        1,
+                                        Intent("me.phh.treble.app.ImsInstalled"),
+                                        PendingIntent.FLAG_ONE_SHOT).intentSender)
+                        activity.unregisterReceiver(this)
+                    } else {
+                        Log.e("PHH", "Column COLUMN_LOCAL_URI not found in cursor")
+                        // Дополнительная обработка ошибки, если нужно
+                    }
                 }
 
             }, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
