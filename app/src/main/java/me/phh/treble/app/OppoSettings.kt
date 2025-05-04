@@ -10,7 +10,7 @@ object OppoSettings : Settings {
 
     override fun enabled() = Tools.deviceId.startsWith("RMX") || 
         Tools.deviceId == "CPH1859" || 
-        Tools.oppoProjectName.contains("19531")
+        Tools.oppoPrjName.contains("19531")
 }
 
 class OppoSettingsFragment : SettingsFragment() {
